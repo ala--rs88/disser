@@ -1,3 +1,4 @@
+import sys
 import os
 import operator
 import numpy
@@ -98,6 +99,7 @@ def main():
         progress_counter += 1
         if progress_counter % 10 == 0:
             print repr(progress_counter) + ' already classified...'
+            print 'current GLCMs cache size:' + repr(sys.getsizeof(glcm_cache) / 1024) + ' kilobytes'
 
     total_attempts = len(images_names_to_be_analyzed)
     correct_results = total_attempts - mistakes_count
