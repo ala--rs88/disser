@@ -33,18 +33,25 @@ def get_prevailing_class(image_names):
     prevailing_class = max(occurrences.iteritems(), key=operator.itemgetter(1))[0]
     return prevailing_class
 
+glcm_cache = {}
+def getGLCM(images_dir_path, image_name):
+    if not image_name in glcm_cache:
+        image = imread(os.path.join(images_dir_path, image_name))
+        computedGLCM = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
+        glcm_cache[image_name] = computedGLCM
+
+    glcm = glcm_cache[image_name]
+    return glcm
 
 def calculate_distances_descriptors(images_dir_path, images_names, image_name_to_be_compared):
     descriptors = []
 
-    image_to_be_compared = imread(os.path.join(images_dir_path, image_name_to_be_compared))
-    glcm_to_be_compared = greycomatrix(image_to_be_compared, [5], [0], 256, symmetric=True, normed=False)
+    glcm_to_be_compared = getGLCM(images_dir_path, image_name_to_be_compared)
 
     for image_name in images_names:
         if image_name == image_name_to_be_compared:
             continue
-        image = imread(os.path.join(images_dir_path, image_name))
-        glcm = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
+        glcm = getGLCM(images_dir_path, image_name)
         distance = numpy.linalg.norm(glcm[:, :, 0, 0] - glcm_to_be_compared[:, :, 0, 0])
         descriptors.append((image_name_to_be_compared, image_name, distance))
 
