@@ -34,36 +34,46 @@ def get_prevailing_class(image_names):
     prevailing_class = max(occurrences.iteritems(), key=operator.itemgetter(1))[0]
     return prevailing_class
 
+# cache
+# --------------------------------------------------------------------------
 glcm_cache = {}
-def getGLCM(images_dir_path, image_name):
-    if not image_name in glcm_cache:
-        image = imread(os.path.join(images_dir_path, image_name))
-        computedGLCM = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
-        glcm_cache[image_name] = computedGLCM
+def getGLCM( image_name):
+    # if not image_name in glcm_cache:
+    #     image = imread(os.path.join(images_dir_path, image_name))
+    #     computedGLCM = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
+    #     glcm_cache[image_name] = computedGLCM
 
     glcm = glcm_cache[image_name]
     return glcm
 
-def calculate_distances_descriptors(images_dir_path, images_names, image_name_to_be_compared):
+def precomputeGLCMCache(images_dir_path, images_names):
+    for image_name in images_names:
+        image = imread(os.path.join(images_dir_path, image_name))
+        computedGLCM = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
+        glcm_cache[image_name] = computedGLCM
+
+# -------------------------------------
+
+def calculate_distances_descriptors(images_names, image_name_to_be_compared):
     descriptors = []
 
-    glcm_to_be_compared = getGLCM(images_dir_path, image_name_to_be_compared)
+    glcm_to_be_compared = getGLCM(image_name_to_be_compared)
 
     for image_name in images_names:
         if image_name == image_name_to_be_compared:
             continue
-        glcm = getGLCM(images_dir_path, image_name)
+        glcm = getGLCM(image_name)
         distance = numpy.linalg.norm(glcm[:, :, 0, 0] - glcm_to_be_compared[:, :, 0, 0])
         descriptors.append((image_name_to_be_compared, image_name, distance))
 
     return descriptors
 
 
-def try_classify_image(images_dir_path, images_names, image_name_to_be_classified):
+def try_classify_image(images_names, image_name_to_be_classified):
     actual_image_class = get_class_by_image_name(image_name_to_be_classified)
     # print 'Image to be classified: (actual_class=' + actual_image_class + ') ' + image_name_to_be_classified
 
-    distances_descriptors = calculate_distances_descriptors(images_dir_path, images_names, image_name_to_be_classified)
+    distances_descriptors = calculate_distances_descriptors(images_names, image_name_to_be_classified)
     distances_descriptors.sort(key=lambda tup: tup[2])
 
     top_closest_images_names = [d[1] for d in distances_descriptors[:5]]
@@ -86,20 +96,24 @@ def try_classify_image(images_dir_path, images_names, image_name_to_be_classifie
 def main():
     images_names = get_images_names(IMAGES_DIR_PATH, IMAGES_EXTENSION)
     print 'Images count: ' + repr(len(images_names))
+
+
+    precomputeGLCMCache(IMAGES_DIR_PATH, images_names)
+    print 'GLCMs cache size:' + repr(sys.getsizeof(glcm_cache) / 1024) + ' kilobytes'
     print ''
 
     progress_counter = 0
     mistakes_count = 0
     images_names_to_be_analyzed = images_names[:]
     for image_name_to_be_classified in images_names_to_be_analyzed:
-        is_correct = try_classify_image(IMAGES_DIR_PATH, images_names, image_name_to_be_classified)
+        is_correct = try_classify_image(images_names, image_name_to_be_classified)
         if not is_correct:
             mistakes_count += 1
 
         progress_counter += 1
         if progress_counter % 10 == 0:
             print repr(progress_counter) + ' already classified...'
-            print 'current GLCMs cache size:' + repr(sys.getsizeof(glcm_cache) / 1024) + ' kilobytes'
+
 
     total_attempts = len(images_names_to_be_analyzed)
     correct_results = total_attempts - mistakes_count
