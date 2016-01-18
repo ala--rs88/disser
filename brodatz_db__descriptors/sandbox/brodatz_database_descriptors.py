@@ -17,8 +17,8 @@ IMAGES_DIR_PATH = 'brodatz_database_bd.gidx'
 IMAGES_EXTENSION = 'png'
 
 
-PQ_product_members_count = 300
-PQ_clusters_count = 100
+PQ_product_members_count = 2
+PQ_clusters_count = 500
 
 
 def get_images_names(directory_path, extension):
@@ -59,6 +59,7 @@ glcm_PCA_cache = {}
 glcm_BINNED_PCA_cache = {}
 glcm_PQ_Cache = {}
 glcm_PQ_Codebooks = {}
+glcm_PQ_Precomputed_Centroids_Squared_Distances = {}
 
 def get_GLCM(image_name):
     descriptor = glcm_cache[image_name][:, :, 0, 0]
@@ -78,18 +79,28 @@ def get_descriptor(image_name):
     # DESCRIPTOR CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     return descriptor
 
+# optimize: use matrix computation
+# try using sklearn for metric computation
+# try using l1 metric
 def get_l2_distance(stored_descriptor, query_descriptor):
     return numpy.linalg.norm(stored_descriptor - query_descriptor)
 
+# Both stored_descriptor and query_descriptor are PQ-descriptors
 def get_PQ_distance(stored_descriptor, query_descriptor, product_members_count):
-    flattened_descriptor = query_descriptor.flatten()
-    query_descriptor_chunks = split_array_of_arrays_by_columns(numpy.array([flattened_descriptor]), product_members_count)
+
     distances_sum = 0
-    for index in xrange(0, len(query_descriptor_chunks)):
-        q_part = query_descriptor_chunks[index][0]
-        s_part = glcm_PQ_Codebooks[index]['clusters_centriods'][stored_descriptor[index]]
-        squared_part_distance = get_l2_distance(s_part, q_part)**2
-        distances_sum += squared_part_distance
+    for index in xrange(0, len(stored_descriptor)):
+        stored_centroid_marker = stored_descriptor[index]
+        query_centroid_marker = query_descriptor[index]
+
+        a = stored_centroid_marker
+        b = query_centroid_marker
+        if a > b:
+            a = query_centroid_marker
+            b = stored_centroid_marker
+
+        squared_distance = glcm_PQ_Precomputed_Centroids_Squared_Distances[index][a][b]
+        distances_sum += squared_distance
 
     distance = math.sqrt(distances_sum)
     return distance
@@ -107,6 +118,7 @@ def getGLCM(images_dir_path, image_name):
     image = imread(os.path.join(images_dir_path, image_name))
     glcm = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
     return glcm
+
 
 def precompute_GLCM_Cache(images_dir_path, images_names):
     print '--------------------------------------------------------------------------'
@@ -175,6 +187,20 @@ def split_array_of_arrays_by_columns(array_of_arrays, chunks_count):
     return chunks
 
 
+def compute_all_possible_squared_distances_combination(centroids_values):
+    sq_distances = {}
+
+    for a in xrange(0, len(centroids_values)):
+        sq_distances[a] = {}
+        for b in xrange(a, len(centroids_values)):
+            c1 = centroids_values[a]
+            c2 = centroids_values[b]
+            distance = get_l2_distance(c1, c2)
+            sq_distances[a][b] = distance**2
+
+    return sq_distances;
+
+
 def precompute_GLCM_Product_Quantization_Cache(images_dir_path, images_names, clusters_count, product_members_count):
     print '--------------------------------------------------------------------------'
     start = time.time()
@@ -200,7 +226,11 @@ def precompute_GLCM_Product_Quantization_Cache(images_dir_path, images_names, cl
 
         glcm_PQ_Codebooks[chunk_index] = {
             'clusters_labels': estimator.labels_,
-            'clusters_centriods': estimator.cluster_centers_};
+            'clusters_centriods': estimator.cluster_centers_,
+            'estimator': estimator
+        };
+        glcm_PQ_Precomputed_Centroids_Squared_Distances[chunk_index] = compute_all_possible_squared_distances_combination(
+            estimator.cluster_centers_)
 
         for image_index in xrange(0, len(estimator.labels_)):
             image_name = images_names[image_index]
@@ -213,28 +243,56 @@ def precompute_GLCM_Product_Quantization_Cache(images_dir_path, images_names, cl
     secs = end - start
     msecs = secs * 1000  # millisecs
 
-    #print 'Product Quantization GLCMs cache size:' + repr(sys.getsizeof(glcm_PQ_Cache)) + ' bytes'
-    #print 'Product Quantization GLCMs cache dim:' + repr(len(glcm_PQ_Cache.keys())) + '*' + repr(len(glcm_PQ_Cache[glcm_PQ_Cache.keys()[0]]))
-    #print 'Product Quantization GLCMs descriptors size:' + repr(sys.getsizeof(glcm_PQ_Cache.values())) + ' bytes'
+    print 'Product Quantization GLCMs cache size:' + repr(sys.getsizeof(glcm_PQ_Cache)) + ' bytes'
+    print 'Product Quantization GLCMs cache dim:' + repr(len(glcm_PQ_Cache.keys())) + '*' + repr(len(glcm_PQ_Cache[glcm_PQ_Cache.keys()[0]]))
+    print 'Product Quantization GLCMs descriptors size:' + repr(sys.getsizeof(glcm_PQ_Cache.values())) + ' bytes'
+    print 'Product Quantization GLCMs distances size:' \
+          + repr(sys.getsizeof(glcm_PQ_Precomputed_Centroids_Squared_Distances))\
+          + ' bytes'
     print 'Product Quantization GLCM elapsed time: %f s (%f ms)' % (secs, msecs)
     print '--------------------------------------------------------------------------'
 
 # -------------------------------------
 
+def predict_PQ_descriptor(glcm_descriptor):
+    flattened_glcm_descriptor = glcm_descriptor.flatten()
+
+    query_descriptor_chunks = split_array_of_arrays_by_columns(numpy.array([flattened_glcm_descriptor]), PQ_product_members_count)
+
+    pq_descriptor = [None]*len(query_descriptor_chunks)
+
+    for index in xrange(0, len(query_descriptor_chunks)):
+        print repr(index) + ' STARTED'
+        glcm_chunk = query_descriptor_chunks[index]#[0]
+        centroid = glcm_PQ_Codebooks[index]['estimator'].predict(glcm_chunk)
+        pq_descriptor[index] = centroid
+        print repr(index) + ' OK'
+
+    return pq_descriptor
+
 
 def calculate_distances_descriptors_PQ(images_names, image_name_to_be_compared):
     descriptors = []
 
-    query_descriptor = get_GLCM(image_name_to_be_compared)
+    query_GLCM_descriptor = get_GLCM(image_name_to_be_compared)
+    query_descriptor = get_descriptor(image_name_to_be_compared)#predict_PQ_descriptor(query_GLCM_descriptor)
 
     for image_name in images_names:
         if image_name == image_name_to_be_compared:
             continue
         stored_descriptor = get_descriptor(image_name)
+
+        #start = time.time()
         distance = calculate_distance(stored_descriptor, query_descriptor)
+        #end = time.time()
+        #secs = end - start
+        #msecs = secs * 1000  # millisecs
+        #print 'PQ Distance calculation time: %f s (%f ms)' % (secs, msecs)
+
         descriptors.append((image_name_to_be_compared, image_name, distance))
 
     return descriptors
+
 
 def calculate_distances_descriptors(images_names, image_name_to_be_compared):
     descriptors = []
