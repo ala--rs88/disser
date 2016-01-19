@@ -1,19 +1,35 @@
 from abstract_finder import AbstractFinder
 from skimage.feature import greycomatrix
 import numpy
+from sklearn.decomposition import PCA
 
 __author__ = 'IgorKarpov'
 
 
-class GLCMFinder(AbstractFinder):
+class GLCMPCAFinder(AbstractFinder):
 
     __descriptors_cache = {}
+    pca = None
 
     def __init__(self, data_source):
-        super(GLCMFinder, self).__init__(data_source)
+        super(GLCMPCAFinder, self).__init__(data_source)
 
     def learn(self, train_data_source, params_dict):
-        self.__descriptors_cache = self.__build_descriptors_cache(train_data_source)
+        flattened_descriptors = [None] * train_data_source.get_count()
+        for image_index in xrange(train_data_source.get_count()):
+            image = train_data_source.get_image(image_index)
+            raw_descriptor = self.__build_glcm_descriptor(image)
+            flattened_descriptors[image_index] = raw_descriptor.flatten()
+
+        PCA_train_set = numpy.array(flattened_descriptors)
+
+        self.pca = PCA(n_components=0.9999)
+        transformed_train_set = self.pca.fit_transform(PCA_train_set)
+
+        for image_index in xrange(train_data_source.get_count()):
+            image_name = train_data_source.get_image_file_name(image_index)
+            self.__descriptors_cache[image_name] = transformed_train_set[image_index]
+
 
     def find_top_matches(self, query_image, top_count):
         distances = self.__calculate_distances(query_image)
@@ -21,29 +37,21 @@ class GLCMFinder(AbstractFinder):
         top_matching_images_ids = [x[0] for x in distances[:5]]
         return top_matching_images_ids
 
-    def __build_descriptors_cache(self, data_source):
-        descriptors_cache = {}
-        for image_index in xrange(0, data_source.get_count()):
-            image = self.data_source.get_image(image_index)
-            descriptor = self.__build_descriptor(image)
-            image_file_name = self.data_source.get_image_file_name(image_index)
-            descriptors_cache[image_file_name] = descriptor
-        return descriptors_cache
-
     @staticmethod
-    def __build_descriptor(image):
+    def __build_glcm_descriptor(image):
         glcm_descriptor = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
         return glcm_descriptor
 
     def __calculate_distances(self, query_image):
         distances = []
 
-        query_image_descriptor = self.__build_descriptor(query_image)
+        query_image_glcm_descriptor = self.__build_glcm_descriptor(query_image)
+        query_image_glcm_pca_descriptor = self.pca.transform(query_image_glcm_descriptor.flatten())
 
         for image_index in xrange(0, self.data_source.get_count()):
             image_file_name = self.data_source.get_image_file_name(image_index)
             image_descriptor = self.__descriptors_cache[image_file_name]
-            distance = GLCMFinder.__calculate_distance(image_descriptor, query_image_descriptor)
+            distance = GLCMPCAFinder.__calculate_distance(image_descriptor, query_image_glcm_pca_descriptor)
             distances.append((image_index, distance))
 
         return distances

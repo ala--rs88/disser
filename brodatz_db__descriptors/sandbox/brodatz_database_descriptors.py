@@ -75,7 +75,7 @@ def get_GLCM_PQ(image_name):
 
 def get_descriptor(image_name):
     # DESCRIPTOR CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    descriptor = get_GLCM_PQ(image_name)
+    descriptor = get_GLCM_PCA(image_name)
     # DESCRIPTOR CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     return descriptor
 
@@ -107,8 +107,8 @@ def get_PQ_distance(stored_descriptor, query_descriptor, product_members_count):
 
 def calculate_distance(stored_descriptor, query_descriptor):
     # DISTANCE CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    #return get_l2_distance(stored_descriptor, query_descriptor)
-    return get_PQ_distance(stored_descriptor, query_descriptor, PQ_product_members_count)
+    return get_l2_distance(stored_descriptor, query_descriptor)
+    #return get_PQ_distance(stored_descriptor, query_descriptor, PQ_product_members_count)
     # DISTANCE CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -147,7 +147,7 @@ def precompute_GLCM_PCA_Cache(images_dir_path, images_names):
 
     PCA_train_set = numpy.array(flattened_descriptors)
 
-    pca = PCA(n_components=0.9999)
+    pca = PCA(n_components=0.8)
     print 'RAW:'
     print PCA_train_set.shape
     print PCA_train_set
@@ -313,8 +313,8 @@ def try_classify_image(images_names, image_name_to_be_classified):
     actual_image_class = get_class_by_image_name(image_name_to_be_classified)
     # print 'Image to be classified: (actual_class=' + actual_image_class + ') ' + image_name_to_be_classified
 
-    #distances_descriptors = calculate_distances_descriptors(images_names, image_name_to_be_classified)
-    distances_descriptors = calculate_distances_descriptors_PQ(images_names, image_name_to_be_classified)
+    distances_descriptors = calculate_distances_descriptors(images_names, image_name_to_be_classified)
+    #distances_descriptors = calculate_distances_descriptors_PQ(images_names, image_name_to_be_classified)
     distances_descriptors.sort(key=lambda tup: tup[2])
 
     top_closest_images_names = [d[1] for d in distances_descriptors[:5]]
@@ -339,10 +339,10 @@ def main():
     print 'Images count: ' + repr(len(images_names))
 
 
-    precompute_GLCM_Cache(IMAGES_DIR_PATH, images_names)
-    #precompute_GLCM_PCA_Cache(IMAGES_DIR_PATH, images_names)
+    #precompute_GLCM_Cache(IMAGES_DIR_PATH, images_names)
+    precompute_GLCM_PCA_Cache(IMAGES_DIR_PATH, images_names)
 
-    precompute_GLCM_Product_Quantization_Cache(IMAGES_DIR_PATH, images_names, PQ_clusters_count, PQ_product_members_count)
+    #precompute_GLCM_Product_Quantization_Cache(IMAGES_DIR_PATH, images_names, PQ_clusters_count, PQ_product_members_count)
 
     print ''
 
