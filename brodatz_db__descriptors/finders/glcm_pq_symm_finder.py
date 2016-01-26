@@ -113,11 +113,9 @@ class GLCMPQSymmetricFinder(AbstractFinder):
         pq_descriptor = [None]*len(query_descriptor_chunks)
 
         for index in xrange(0, len(query_descriptor_chunks)):
-            print repr(index) + ' STARTED'
             glcm_chunk = query_descriptor_chunks[index]
             centroid = self.glcm_pq_codebooks[index]['estimator'].predict(glcm_chunk)[0]
             pq_descriptor[index] = centroid
-            print repr(index) + ' OK'
 
         return pq_descriptor
 

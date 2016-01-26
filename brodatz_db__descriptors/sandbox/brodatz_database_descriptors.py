@@ -17,8 +17,8 @@ IMAGES_DIR_PATH = 'brodatz_database_bd.gidx'
 IMAGES_EXTENSION = 'png'
 
 
-PQ_product_members_count = 3
-PQ_clusters_count = 10
+PQ_product_members_count = 5
+PQ_clusters_count = 200
 
 
 def get_images_names(directory_path, extension):
@@ -342,7 +342,7 @@ def try_classify_image(images_names, image_name_to_be_classified):
 
 
 def main():
-    images_names = get_images_names(IMAGES_DIR_PATH, IMAGES_EXTENSION)[:50]
+    images_names = get_images_names(IMAGES_DIR_PATH, IMAGES_EXTENSION)
     print 'Images count: ' + repr(len(images_names))
 
 
