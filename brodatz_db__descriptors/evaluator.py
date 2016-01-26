@@ -1,6 +1,7 @@
 from data_source import DataSource
 #from finders.glcm_finder import GLCMFinder
 from finders.glcm_pca_finder import GLCMPCAFinder
+from finders.glcm_pq_symm_finder import GLCMPQSymmetricFinder
 from knn_classifier import kNNClassifier
 import os
 
@@ -18,7 +19,8 @@ class Evaluator:
         file_names = self.__get_images_names(self.files_path, 'png')
         data_source = DataSource(self.files_path, file_names)
         #finder = GLCMFinder(data_source)
-        finder = GLCMPCAFinder(data_source)
+        #finder = GLCMPCAFinder(data_source)
+        finder = GLCMPQSymmetricFinder(data_source, 5, 200)
         classifier = kNNClassifier(5, finder)
 
         print('learning/indexing in progress ...')

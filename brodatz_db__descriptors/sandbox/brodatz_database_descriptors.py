@@ -17,8 +17,8 @@ IMAGES_DIR_PATH = 'brodatz_database_bd.gidx'
 IMAGES_EXTENSION = 'png'
 
 
-PQ_product_members_count = 2
-PQ_clusters_count = 500
+PQ_product_members_count = 3
+PQ_clusters_count = 10
 
 
 def get_images_names(directory_path, extension):
@@ -75,7 +75,8 @@ def get_GLCM_PQ(image_name):
 
 def get_descriptor(image_name):
     # DESCRIPTOR CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    descriptor = get_GLCM_PCA(image_name)
+    #descriptor = get_GLCM_PCA(image_name)
+    descriptor = get_GLCM_PQ(image_name)
     # DESCRIPTOR CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     return descriptor
 
@@ -107,8 +108,8 @@ def get_PQ_distance(stored_descriptor, query_descriptor, product_members_count):
 
 def calculate_distance(stored_descriptor, query_descriptor):
     # DISTANCE CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    return get_l2_distance(stored_descriptor, query_descriptor)
-    #return get_PQ_distance(stored_descriptor, query_descriptor, PQ_product_members_count)
+    #return get_l2_distance(stored_descriptor, query_descriptor)
+    return get_PQ_distance(stored_descriptor, query_descriptor, PQ_product_members_count)
     # DISTANCE CONFIG !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
@@ -219,9 +220,9 @@ def precompute_GLCM_Product_Quantization_Cache(images_dir_path, images_names, cl
     for image_name in images_names:
         glcm_PQ_Cache[image_name] = [None]*product_members_count
 
-    estimator = KMeans(n_clusters=clusters_count)
     for chunk_index in xrange(0, len(chunks)):
         chunk = chunks[chunk_index]
+        estimator = KMeans(n_clusters=clusters_count)
         estimator.fit(chunk)
 
         glcm_PQ_Codebooks[chunk_index] = {
@@ -263,8 +264,13 @@ def predict_PQ_descriptor(glcm_descriptor):
 
     for index in xrange(0, len(query_descriptor_chunks)):
         print repr(index) + ' STARTED'
-        glcm_chunk = query_descriptor_chunks[index]#[0]
-        centroid = glcm_PQ_Codebooks[index]['estimator'].predict(glcm_chunk)
+        glcm_chunk = query_descriptor_chunks[index]
+        print 'chunk = ' + repr(glcm_chunk)
+        estimator = glcm_PQ_Codebooks[index]['estimator']
+        prediction = estimator.predict(glcm_chunk)
+        centroid = prediction[0]
+        print 'centroid = ' + repr(centroid)
+        # !!! centroid means LABEL here, not actual centroid
         pq_descriptor[index] = centroid
         print repr(index) + ' OK'
 
@@ -275,7 +281,8 @@ def calculate_distances_descriptors_PQ(images_names, image_name_to_be_compared):
     descriptors = []
 
     query_GLCM_descriptor = get_GLCM(image_name_to_be_compared)
-    query_descriptor = get_descriptor(image_name_to_be_compared)#predict_PQ_descriptor(query_GLCM_descriptor)
+    query_descriptor = predict_PQ_descriptor(query_GLCM_descriptor)
+    #query_descriptor = get_descriptor(image_name_to_be_compared)
 
     for image_name in images_names:
         if image_name == image_name_to_be_compared:
@@ -313,8 +320,8 @@ def try_classify_image(images_names, image_name_to_be_classified):
     actual_image_class = get_class_by_image_name(image_name_to_be_classified)
     # print 'Image to be classified: (actual_class=' + actual_image_class + ') ' + image_name_to_be_classified
 
-    distances_descriptors = calculate_distances_descriptors(images_names, image_name_to_be_classified)
-    #distances_descriptors = calculate_distances_descriptors_PQ(images_names, image_name_to_be_classified)
+    #distances_descriptors = calculate_distances_descriptors(images_names, image_name_to_be_classified)
+    distances_descriptors = calculate_distances_descriptors_PQ(images_names, image_name_to_be_classified)
     distances_descriptors.sort(key=lambda tup: tup[2])
 
     top_closest_images_names = [d[1] for d in distances_descriptors[:5]]
@@ -335,14 +342,14 @@ def try_classify_image(images_names, image_name_to_be_classified):
 
 
 def main():
-    images_names = get_images_names(IMAGES_DIR_PATH, IMAGES_EXTENSION)
+    images_names = get_images_names(IMAGES_DIR_PATH, IMAGES_EXTENSION)[:50]
     print 'Images count: ' + repr(len(images_names))
 
 
-    #precompute_GLCM_Cache(IMAGES_DIR_PATH, images_names)
-    precompute_GLCM_PCA_Cache(IMAGES_DIR_PATH, images_names)
+    precompute_GLCM_Cache(IMAGES_DIR_PATH, images_names)
+    #precompute_GLCM_PCA_Cache(IMAGES_DIR_PATH, images_names)
 
-    #precompute_GLCM_Product_Quantization_Cache(IMAGES_DIR_PATH, images_names, PQ_clusters_count, PQ_product_members_count)
+    precompute_GLCM_Product_Quantization_Cache(IMAGES_DIR_PATH, images_names, PQ_clusters_count, PQ_product_members_count)
 
     print ''
 

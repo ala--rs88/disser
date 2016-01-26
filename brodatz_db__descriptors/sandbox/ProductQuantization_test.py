@@ -33,19 +33,20 @@ vectors = np.array([[1.,  2., 0.],
 #     print xx[0]
 #     print ''
 
-vectors = vectors[:,0:1]
+vectors = vectors[:,0:2]
 print vectors
 
 kmeans = KMeans(n_clusters=2)
-y = kmeans.fit_transform(vectors)
-print y
+kmeans.fit(vectors)
+# print 'y:'
+# print y
 print ''
 print(kmeans.labels_)
 print(kmeans.cluster_centers_)
 
 
-x = kmeans.predict([[1.],[10.]])
-print ''
+x = kmeans.predict([1., 2.])
+print 'x:'
 print x
 
 # import numpy as np
