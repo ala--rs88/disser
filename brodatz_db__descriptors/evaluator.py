@@ -24,7 +24,7 @@ class Evaluator:
         #finder = GLCMPCAFinder(data_source)
         #finder = GLCMPQSymmetricFinder(data_source, 5, 200)
         #finder = GLCMRandomPQSymmetricFinder(data_source, 3, 256*200, 500) # 89.5895895896
-        finder = GLCMPQAsymmetricFinder(data_source, 7, 100)
+        finder = GLCMPQAsymmetricFinder(data_source, 5, 200)
         classifier = kNNClassifier(5, finder)
 
         print('learning/indexing in progress ...')
@@ -36,6 +36,9 @@ class Evaluator:
         progress_counter = 0
         mistakes_count = 0
         current_total_attempts = 0
+
+        local_attempts_count = 0
+        local_mistakes_count = 0
 
         total_images_count = data_source.get_count()
         for image_index in xrange(0, total_images_count):
@@ -50,14 +53,26 @@ class Evaluator:
             is_correct = calculated_class == actual_class
             if not is_correct:
                 mistakes_count += 1
+                local_mistakes_count += 1
 
             current_total_attempts += 1
+            local_attempts_count += 1
 
             progress_counter += 1
             if progress_counter % 10 == 0:
                 current_correct_results = current_total_attempts - mistakes_count
                 current_accuracy = (float(current_correct_results) / current_total_attempts) * 100
-                print repr(progress_counter) + ' already classified... (current accuracy = ' + repr(current_accuracy) + ')'
+                print repr(progress_counter) \
+                      + ' already classified... (current accuracy = ' \
+                      + repr(current_accuracy)\
+                      + ') (increment: ' \
+                      + repr(local_attempts_count-local_mistakes_count) \
+                      + ' out of ' \
+                      + repr(local_attempts_count) \
+                      + ')'
+
+                local_attempts_count = 0
+                local_mistakes_count = 0
 
         data_source.excluded_index = -1;
 

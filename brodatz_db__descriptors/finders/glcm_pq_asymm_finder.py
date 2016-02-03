@@ -65,13 +65,13 @@ class GLCMPQAsymmetricFinder(AbstractFinder):
     def __calculate_distances(self, query_image):
         distances = []
 
-        query_GLCM_descriptor = self.__build_glcm_descriptor(query_image)
+        query_GLCM_descriptor = GLCMPQAsymmetricFinder.__build_glcm_descriptor(query_image)
         flattened_query_GLCM_descriptor = query_GLCM_descriptor.flatten()
         chunked_query_GLCM_descriptor = GLCMPQAsymmetricFinder.split_array_of_arrays_by_columns(
             numpy.array([flattened_query_GLCM_descriptor]),
             self.product_members_count)
 
-        squared_distances_cache = [{}] * self.product_members_count
+        squared_distances_cache = [{} for x in range(self.product_members_count)]
 
         for image_index in xrange(self.data_source.get_count()):
             image_file_name = self.data_source.get_image_file_name(image_index)
