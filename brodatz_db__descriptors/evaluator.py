@@ -28,7 +28,9 @@ class Evaluator:
         #finder = GLCMRandomPQSymmetricFinder(data_source, 3, 256*200, 500) # 89.5895895896
         #finder = GLCMPQAsymmetricFinder(data_source, 5, 200) # 84.6846846847
         #finder = GLCMRandomPQAsymmetricFinder(data_source, 3, 256*200, 500) # 87.5875875876
-        finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 3, 256*200, 500) # 64.8648648649
+        #finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 3, 256*200, 500) # 64.8648648649
+        #finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 40, 3000, 100) # 92.4924924925
+        finder = GLCMRandomPQSymmetricFinder(data_source, 40, 3000, 100) # 85.8858858859
         classifier = kNNClassifier(5, finder)
 
         print('learning/indexing in progress ...')
