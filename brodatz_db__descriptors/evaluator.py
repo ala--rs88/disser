@@ -4,6 +4,7 @@ from finders.glcm_pca_finder import GLCMPCAFinder
 from finders.glcm_pq_symm_finder import GLCMPQSymmetricFinder
 from finders.glcm_rpq_symm_finder import GLCMRandomPQSymmetricFinder
 from finders.glcm_pq_asymm_finder import GLCMPQAsymmetricFinder
+from finders.glcm_rpq_asymm_finder import GLCMRandomPQAsymmetricFinder
 from knn_classifier import kNNClassifier
 import os
 
@@ -24,7 +25,8 @@ class Evaluator:
         #finder = GLCMPCAFinder(data_source)
         #finder = GLCMPQSymmetricFinder(data_source, 5, 200)
         #finder = GLCMRandomPQSymmetricFinder(data_source, 3, 256*200, 500) # 89.5895895896
-        finder = GLCMPQAsymmetricFinder(data_source, 5, 200)
+        #finder = GLCMPQAsymmetricFinder(data_source, 5, 200) # 84.6846846847
+        finder = GLCMRandomPQAsymmetricFinder(data_source, 3, 256*200, 500) # 87.5875875876
         classifier = kNNClassifier(5, finder)
 
         print('learning/indexing in progress ...')
