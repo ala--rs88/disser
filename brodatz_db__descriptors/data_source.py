@@ -29,7 +29,9 @@ class DataSource:
     def get_image(self, image_index):
         actual_image_index = self.__convert_visible_index_to_actual(image_index)
         image_file_name = self.images_files_names[actual_image_index]
-        image = imread(os.path.join(self.images_files_path, image_file_name))
+        path = os.path.join(self.images_files_path, image_file_name)
+        #image = self.__readAndBinImage(path)
+        image = imread(path)
         return image
 
     def get_image_class(self, image_index):
@@ -43,3 +45,14 @@ class DataSource:
         if 0 <= self.excluded_index <= visible_index:
             actual = visible_index + 1
         return actual
+
+    @staticmethod
+    def __readAndBinImage(image_path):
+        image = imread(image_path)
+        x, y = image.shape
+        color_depth = 8
+        bin_size = 256 / color_depth
+        for i in xrange(x):
+            for j in xrange(y):
+                image[i, j] = image[i, j] / bin_size
+        return image
