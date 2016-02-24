@@ -34,7 +34,7 @@ class WTAFinder(AbstractFinder):
         for image_index in xrange(images_count):
             image_name = train_data_source.get_image_file_name(image_index)
             image = train_data_source.get_image(image_index)
-            self.wta_hashes_cache[image_name] = WTAFinder.__build_wta_hash(image,
+            self.wta_hashes_cache[image_name] = self.__build_wta_hash(image,
                                                                            self.random_permutations_indexes)
         print('WTA Hashes computed')
 
@@ -47,7 +47,7 @@ class WTAFinder(AbstractFinder):
     def __calculate_distances(self, query_image):
         distances = []
 
-        query_hash = WTAFinder.__build_wta_hash(query_image,
+        query_hash = self.__build_wta_hash(query_image,
                                                 self.random_permutations_indexes)
 
         for image_index in xrange(self.data_source.get_count()):
@@ -64,14 +64,8 @@ class WTAFinder(AbstractFinder):
         distance = numpy.linalg.norm(vector1 - vector2) # -- L2
         return distance
 
-    @staticmethod
-    def __build_glcm_descriptor(image):
-        glcm_descriptor = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False).flatten()
-        return glcm_descriptor
-
-    @staticmethod
-    def __build_wta_hash(image, random_permutations_indexes):
-        descriptor = WTAFinder.__build_glcm_descriptor(image)
+    def __build_wta_hash(self, image, random_permutations_indexes):
+        descriptor = self.__descriptor_builder.build_descriptor(image)
         random_active_permutations = []
 
         for permutation_indexes in random_permutations_indexes:

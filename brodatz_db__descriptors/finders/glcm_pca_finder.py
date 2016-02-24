@@ -18,8 +18,8 @@ class GLCMPCAFinder(AbstractFinder):
         flattened_descriptors = [None] * train_data_source.get_count()
         for image_index in xrange(train_data_source.get_count()):
             image = train_data_source.get_image(image_index)
-            raw_descriptor = self.__build_glcm_descriptor(image)
-            flattened_descriptors[image_index] = raw_descriptor.flatten()
+            descriptor = self.__descriptor_builder.build_descriptor(image)
+            flattened_descriptors[image_index] = descriptor
 
         PCA_train_set = numpy.array(flattened_descriptors)
 
@@ -37,16 +37,11 @@ class GLCMPCAFinder(AbstractFinder):
         top_matching_images_ids = [x[0] for x in distances[:5]]
         return top_matching_images_ids
 
-    @staticmethod
-    def __build_glcm_descriptor(image):
-        glcm_descriptor = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
-        return glcm_descriptor
-
     def __calculate_distances(self, query_image):
         distances = []
 
-        query_image_glcm_descriptor = self.__build_glcm_descriptor(query_image)
-        query_image_glcm_pca_descriptor = self.pca.transform(query_image_glcm_descriptor.flatten())
+        query_image_glcm_descriptor = self.__descriptor_builder.build_descriptor(query_image)
+        query_image_glcm_pca_descriptor = self.pca.transform(query_image_glcm_descriptor)
 
         for image_index in xrange(0, self.data_source.get_count()):
             image_file_name = self.data_source.get_image_file_name(image_index)
