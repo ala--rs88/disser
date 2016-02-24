@@ -75,8 +75,6 @@ class GLCMRandomPQSymmetricEqualityFinder(AbstractFinder):
 
     def build_random_product_members_first_columns_indexes(self, total_size, product_members_count, product_member_size):
 
-        random.seed(12345)
-
         product_members_first_columns_indexes = {}
 
         max_column_index = total_size - product_member_size

@@ -89,7 +89,6 @@ class WTAFinder(AbstractFinder):
         indexes = range(total_permutation_length)
         permutations_indexes = []
 
-        numpy.random.seed(12345)
         for i in xrange(permutations_count):
             permutations_indexes.append(numpy.random.permutation(indexes)[:active_permutation_length])
 

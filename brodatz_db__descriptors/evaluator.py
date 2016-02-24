@@ -10,6 +10,8 @@ from finders.glcm_wta_finder import WTAFinder
 from knn_classifier import kNNClassifier
 from descriptor_builders.glcm_descriptor_builder import GLCMDescriptorBuilder
 import os
+import numpy
+import random
 
 __author__ = 'IgorKarpov'
 
@@ -23,6 +25,8 @@ class Evaluator:
 
     def evaluate_accuracy(self):
         file_names = self.__get_images_names(self.files_path, 'png')
+        numpy.random.seed(12345)
+        random.seed(12345)
 
         data_source = DataSource(self.files_path, file_names, 8)
         descriptor_builder = GLCMDescriptorBuilder(8)
