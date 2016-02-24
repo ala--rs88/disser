@@ -2,51 +2,86 @@ from data_source import DataSource
 #from finders.glcm_finder import GLCMFinder
 from finders.glcm_pca_finder import GLCMPCAFinder
 from finders.glcm_pq_symm_finder import GLCMPQSymmetricFinder
-from finders.glcm_rpq_symm_finder import GLCMRandomPQSymmetricFinder
+
 from finders.glcm_pq_asymm_finder import GLCMPQAsymmetricFinder
 from finders.glcm_rpq_asymm_finder import GLCMRandomPQAsymmetricFinder
 from finders.glcm_rpq_symm_equality_finder import GLCMRandomPQSymmetricEqualityFinder
 from finders.glcm_wta_finder import WTAFinder
 from knn_classifier import kNNClassifier
-from descriptor_builders.glcm_descriptor_builder import GLCMDescriptorBuilder
 import os
 import numpy
 import random
 
 __author__ = 'IgorKarpov'
 
+#finder = GLCMFinder(data_source)
+#finder = GLCMPCAFinder(data_source)
+#finder = GLCMPQSymmetricFinder(data_source, 5, 200)
+#finder = GLCMRandomPQSymmetricFinder(data_source, 3, 256*200, 500) # 89.5895895896 256bin
+#finder = GLCMPQAsymmetricFinder(data_source, 5, 200) # 84.6846846847 256bin
+#finder = GLCMRandomPQAsymmetricFinder(data_source, 3, 256*200, 500) # 87.5875875876 256bin
+#finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 3, 256*200, 500) # 64.8648648649 256bin
+#finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 40, 3000, 100) # 92.4924924925 256bin
+#finder = GLCMRandomPQSymmetricFinder(data_source, 40, 3000, 100) # 85.8858858859 256bin
+#finder = WTAFinder(data_source, 300, 1000) # 84.984984985 256bin
+#finder = GLCMRandomPQSymmetricFinder(data_source, 3, 50, 200) # 60.2602602603 8bin
+#finder = GLCMRandomPQSymmetricFinder(data_source, 10, 20, 100) # 58.958958959 8bin
+#finder = GLCMRandomPQSymmetricFinder(data_source, 5, 30, 500) # 65.4654654655 8bin
+#finder = GLCMRandomPQSymmetricFinder(data_source, 10, 20, 100) # 63.963963964 16bin
+#finder = GLCMRandomPQSymmetricFinder(data_source, descriptor_builder, 40, 3, 100) # 64.964964965 8bin
 
 class Evaluator:
 
-    files_path = None
+    __files_path = None
+    __file_names = None
 
     def __init__(self, files_path):
-        self.files_path = files_path
+        self.__files_path = files_path
+        self.__file_names = Evaluator.__get_images_names(files_path, 'png')
 
-    def evaluate_accuracy(self):
-        file_names = self.__get_images_names(self.files_path, 'png')
-        numpy.random.seed(12345)
-        random.seed(12345)
+    def evaluate_accuracy(self,
+                          image_depths_to_be_evaluated,
+                          build_descriptor_builder,
+                          finder_parameters_sets_to_be_evaluated,
+                          build_finder):
 
-        data_source = DataSource(self.files_path, file_names, 8)
-        descriptor_builder = GLCMDescriptorBuilder(8)
+        # TODO: use using
+        # TODO: create new before begin, then open-append-close in cycle
+        f = open(os.path.join("evaluation_results", "test_results"), 'w')
 
-        #finder = GLCMFinder(data_source)
-        #finder = GLCMPCAFinder(data_source)
-        #finder = GLCMPQSymmetricFinder(data_source, 5, 200)
-        #finder = GLCMRandomPQSymmetricFinder(data_source, 3, 256*200, 500) # 89.5895895896 256bin
-        #finder = GLCMPQAsymmetricFinder(data_source, 5, 200) # 84.6846846847 256bin
-        #finder = GLCMRandomPQAsymmetricFinder(data_source, 3, 256*200, 500) # 87.5875875876 256bin
-        #finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 3, 256*200, 500) # 64.8648648649 256bin
-        #finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 40, 3000, 100) # 92.4924924925 256bin
-        #finder = GLCMRandomPQSymmetricFinder(data_source, 40, 3000, 100) # 85.8858858859 256bin
-        #finder = WTAFinder(data_source, 300, 1000) # 84.984984985 256bin
-        #finder = GLCMRandomPQSymmetricFinder(data_source, 3, 50, 200) # 60.2602602603 8bin
-        #finder = GLCMRandomPQSymmetricFinder(data_source, 10, 20, 100) # 58.958958959 8bin
-        #finder = GLCMRandomPQSymmetricFinder(data_source, 5, 30, 500) # 65.4654654655 8bin
-        #finder = GLCMRandomPQSymmetricFinder(data_source, 10, 20, 100) # 63.963963964 16bin
-        finder = GLCMRandomPQSymmetricFinder(data_source, descriptor_builder, 40, 3, 100) # 64.964964965 8bin
+        for image_depth in image_depths_to_be_evaluated:
+            for finder_parameters_set in finder_parameters_sets_to_be_evaluated:
+                Evaluator.reset_environment()
+                accuracy = Evaluator.evaluate_set_accuracy(self.__files_path,
+                                                           self.__file_names,
+                                                           image_depth,
+                                                           build_descriptor_builder,
+                                                           finder_parameters_set,
+                                                           build_finder)
 
+                f.write('SET EVALUATED:\n')
+                f.write('accuracy = ' + repr(accuracy) + '\n')
+                f.write('depth = ' + repr(image_depth) + '\n')
+                f.write('finder_parameters_set = ' + repr(finder_parameters_set) + '\n\n')
+
+                print('\n\nSET EVALUATED:')
+                print('accuracy = ' + repr(accuracy))
+                print('depth = ' + repr(image_depth))
+                print('finder_parameters_set = ' + repr(finder_parameters_set))
+                print('\n\n')
+
+        f.close()
+
+    @staticmethod
+    def evaluate_set_accuracy(files_path,
+                              file_names,
+                              image_depth,
+                              build_descriptor_builder,
+                              finder_parameters_set,
+                              build_finder):
+        data_source = DataSource(files_path, file_names, image_depth)
+        descriptor_builder = build_descriptor_builder(image_depth)
+        finder = build_finder(data_source, descriptor_builder, finder_parameters_set)
         classifier = kNNClassifier(5, finder)
 
         print('learning/indexing in progress ...')
@@ -96,7 +131,7 @@ class Evaluator:
                 local_attempts_count = 0
                 local_mistakes_count = 0
 
-        data_source.excluded_index = -1;
+        data_source.excluded_index = -1
 
         print('classification completed')
 
@@ -105,7 +140,13 @@ class Evaluator:
 
         return accuracy
 
-    def __get_images_names(self, directory_path, extension):
+    @staticmethod
+    def reset_environment():
+        numpy.random.seed(12345)
+        random.seed(12345)
+
+    @staticmethod
+    def __get_images_names(directory_path, extension):
         postfix = '.' + extension
         images_names = [image_name
                         for image_name
