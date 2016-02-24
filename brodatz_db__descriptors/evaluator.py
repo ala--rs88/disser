@@ -26,13 +26,18 @@ class Evaluator:
         #finder = GLCMFinder(data_source)
         #finder = GLCMPCAFinder(data_source)
         #finder = GLCMPQSymmetricFinder(data_source, 5, 200)
-        #finder = GLCMRandomPQSymmetricFinder(data_source, 3, 256*200, 500) # 89.5895895896
-        #finder = GLCMPQAsymmetricFinder(data_source, 5, 200) # 84.6846846847
-        #finder = GLCMRandomPQAsymmetricFinder(data_source, 3, 256*200, 500) # 87.5875875876
-        #finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 3, 256*200, 500) # 64.8648648649
-        #finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 40, 3000, 100) # 92.4924924925
-        #finder = GLCMRandomPQSymmetricFinder(data_source, 40, 3000, 100) # 85.8858858859
-        finder = WTAFinder(data_source, 300, 1000) # 84.984984985
+        #finder = GLCMRandomPQSymmetricFinder(data_source, 3, 256*200, 500) # 89.5895895896 256bin
+        #finder = GLCMPQAsymmetricFinder(data_source, 5, 200) # 84.6846846847 256bin
+        #finder = GLCMRandomPQAsymmetricFinder(data_source, 3, 256*200, 500) # 87.5875875876 256bin
+        #finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 3, 256*200, 500) # 64.8648648649 256bin
+        #finder = GLCMRandomPQSymmetricEqualityFinder(data_source, 40, 3000, 100) # 92.4924924925 256bin
+        #finder = GLCMRandomPQSymmetricFinder(data_source, 40, 3000, 100) # 85.8858858859 256bin
+        #finder = WTAFinder(data_source, 300, 1000) # 84.984984985 256bin
+        #finder = GLCMRandomPQSymmetricFinder(data_source, 3, 50, 200) # 60.2602602603 8bin
+        #finder = GLCMRandomPQSymmetricFinder(data_source, 10, 20, 100) # 58.958958959 8bin
+        #finder = GLCMRandomPQSymmetricFinder(data_source, 5, 30, 500) # 65.4654654655 8bin
+        #finder = GLCMRandomPQSymmetricFinder(data_source, 10, 20, 100) # 63.963963964 16bin
+        finder = GLCMRandomPQSymmetricFinder(data_source, 40, 3, 100) # 64.964964965 8bin
         classifier = kNNClassifier(5, finder)
 
         print('learning/indexing in progress ...')

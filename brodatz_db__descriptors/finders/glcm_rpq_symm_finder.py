@@ -10,7 +10,7 @@ __author__ = 'IgorKarpov'
 
 class GLCMRandomPQSymmetricFinder(AbstractFinder):
 
-    FLATTENED_GLCM_DESCRIPTOR_SIZE = 256 * 256
+    FLATTENED_GLCM_DESCRIPTOR_SIZE = 8 * 8
 
     glcm_pq_cache = {}
     glcm_pq_codebooks = {}
@@ -126,7 +126,7 @@ class GLCMRandomPQSymmetricFinder(AbstractFinder):
 
     @staticmethod
     def __build_glcm_descriptor(image):
-        glcm_descriptor = greycomatrix(image, [5], [0], 256, symmetric=True, normed=False)
+        glcm_descriptor = greycomatrix(image, [5], [0], 8, symmetric=True, normed=False)
         return glcm_descriptor
 
     def __build_glcm_pq_descriptor(self, glcm_descriptor):

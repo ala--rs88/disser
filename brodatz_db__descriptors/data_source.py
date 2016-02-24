@@ -30,8 +30,8 @@ class DataSource:
         actual_image_index = self.__convert_visible_index_to_actual(image_index)
         image_file_name = self.images_files_names[actual_image_index]
         path = os.path.join(self.images_files_path, image_file_name)
-        #image = self.__readAndBinImage(path)
-        image = imread(path)
+        image = self.__readAndBinImage(path)
+        #image = imread(path)
         return image
 
     def get_image_class(self, image_index):
