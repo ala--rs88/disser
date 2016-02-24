@@ -11,23 +11,21 @@ __author__ = 'IgorKarpov'
 
 class WTAFinder(AbstractFinder):
 
-    FLATTENED_GLCM_DESCRIPTOR_SIZE = 256 * 256
-
     wta_hashes_cache = {}
     random_permutations_indexes = []  # each permutation is represented by an array of indexes of cells in descriptor
 
     active_permutation_length = 0
     permutations_count = 0
 
-    def __init__(self, data_source, permutations_count, active_permutation_length):
-        super(WTAFinder, self).__init__(data_source)
+    def __init__(self, data_source, descriptor_builder, permutations_count, active_permutation_length):
+        super(WTAFinder, self).__init__(data_source, descriptor_builder)
         self.active_permutation_length = active_permutation_length
         self.permutations_count = permutations_count
 
     def learn(self, train_data_source, params_dict):
 
         self.random_permutations_indexes = WTAFinder.__build_random_permutations_indexes(
-            self.FLATTENED_GLCM_DESCRIPTOR_SIZE,
+            self.__descriptor_builder.get_descriptor_length(),
             self.active_permutation_length,
             self.permutations_count)
 

@@ -9,8 +9,8 @@ class GLCMFinder(AbstractFinder):
 
     __descriptors_cache = {}
 
-    def __init__(self, data_source):
-        super(GLCMFinder, self).__init__(data_source)
+    def __init__(self, data_source, descriptor_builder):
+        super(GLCMFinder, self).__init__(data_source, descriptor_builder)
 
     def learn(self, train_data_source, params_dict):
         self.__descriptors_cache = self.__build_descriptors_cache(train_data_source)

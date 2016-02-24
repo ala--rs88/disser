@@ -9,8 +9,6 @@ __author__ = 'IgorKarpov'
 
 class GLCMRandomPQSymmetricEqualityFinder(AbstractFinder):
 
-    FLATTENED_GLCM_DESCRIPTOR_SIZE = 256 * 256
-
     glcm_pq_cache = {}
     glcm_pq_codebooks = {}
     random_product_members_first_columns_indexes = {} # for each product member stores index of the first column in the chunk
@@ -19,8 +17,8 @@ class GLCMRandomPQSymmetricEqualityFinder(AbstractFinder):
     product_member_size = 0
     clusters_count = 0
 
-    def __init__(self, data_source, product_members_count, product_member_size, clusters_count):
-        super(GLCMRandomPQSymmetricEqualityFinder, self).__init__(data_source)
+    def __init__(self, data_source, descriptor_builder, product_members_count, product_member_size, clusters_count):
+        super(GLCMRandomPQSymmetricEqualityFinder, self).__init__(data_source, descriptor_builder)
         self.product_members_count = product_members_count
         self.product_member_size = product_member_size
         self.clusters_count = clusters_count
@@ -28,7 +26,7 @@ class GLCMRandomPQSymmetricEqualityFinder(AbstractFinder):
     def learn(self, train_data_source, params_dict):
 
         self.random_product_members_first_columns_indexes = self.build_random_product_members_first_columns_indexes(
-            self.FLATTENED_GLCM_DESCRIPTOR_SIZE,
+            self.__descriptor_builder.get_descriptor_length(),
             self.product_members_count,
             self.product_member_size)
 

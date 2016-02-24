@@ -8,12 +8,14 @@ class DataSource:
 
     images_files_path = None
     images_files_names = []
+    __image_depth = -1
 
     excluded_index = -1
 
-    def __init__(self, images_files_path, images_files_names):
+    def __init__(self, images_files_path, images_files_names, image_depth):
         self.images_files_path = images_files_path
         self.images_files_names = images_files_names
+        self.__image_depth = image_depth
 
     def get_count(self):
         visible_count = len(self.images_files_names)
@@ -30,8 +32,7 @@ class DataSource:
         actual_image_index = self.__convert_visible_index_to_actual(image_index)
         image_file_name = self.images_files_names[actual_image_index]
         path = os.path.join(self.images_files_path, image_file_name)
-        image = self.__readAndBinImage(path)
-        #image = imread(path)
+        image = self.__readAndBinImage(path, self.__image_depth)
         return image
 
     def get_image_class(self, image_index):
@@ -47,11 +48,10 @@ class DataSource:
         return actual
 
     @staticmethod
-    def __readAndBinImage(image_path):
+    def __readAndBinImage(image_path, image_depth):
         image = imread(image_path)
         x, y = image.shape
-        color_depth = 8
-        bin_size = 256 / color_depth
+        bin_size = 256 / image_depth
         for i in xrange(x):
             for j in xrange(y):
                 image[i, j] = image[i, j] / bin_size

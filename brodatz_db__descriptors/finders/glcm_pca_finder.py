@@ -11,8 +11,8 @@ class GLCMPCAFinder(AbstractFinder):
     __descriptors_cache = {}
     pca = None
 
-    def __init__(self, data_source):
-        super(GLCMPCAFinder, self).__init__(data_source)
+    def __init__(self, data_source, descriptor_builder):
+        super(GLCMPCAFinder, self).__init__(data_source, descriptor_builder)
 
     def learn(self, train_data_source, params_dict):
         flattened_descriptors = [None] * train_data_source.get_count()

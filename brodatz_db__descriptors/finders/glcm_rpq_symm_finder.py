@@ -10,8 +10,6 @@ __author__ = 'IgorKarpov'
 
 class GLCMRandomPQSymmetricFinder(AbstractFinder):
 
-    FLATTENED_GLCM_DESCRIPTOR_SIZE = 8 * 8
-
     glcm_pq_cache = {}
     glcm_pq_codebooks = {}
     glcm_pq_precomputed_centroids_squared_distances = {}
@@ -21,16 +19,22 @@ class GLCMRandomPQSymmetricFinder(AbstractFinder):
     product_member_size = 0
     clusters_count = 0
 
-    def __init__(self, data_source, product_members_count, product_member_size, clusters_count):
-        super(GLCMRandomPQSymmetricFinder, self).__init__(data_source)
+    def __init__(self,
+                 data_source,
+                 descriptor_builder,
+                 product_members_count,
+                 product_member_size,
+                 clusters_count):
+        super(GLCMRandomPQSymmetricFinder, self).__init__(data_source, descriptor_builder)
         self.product_members_count = product_members_count
         self.product_member_size = product_member_size
         self.clusters_count = clusters_count
+        self.__descriptor_builder = descriptor_builder
 
     def learn(self, train_data_source, params_dict):
 
         self.random_product_members_first_columns_indexes = self.build_random_product_members_first_columns_indexes(
-            self.FLATTENED_GLCM_DESCRIPTOR_SIZE,
+            self.__descriptor_builder.get_descriptor_length(),
             self.product_members_count,
             self.product_member_size)
 
@@ -39,8 +43,8 @@ class GLCMRandomPQSymmetricFinder(AbstractFinder):
         flattened_descriptors = [None] * images_count
         for image_index in xrange(images_count):
             image = train_data_source.get_image(image_index)
-            raw_descriptor = GLCMRandomPQSymmetricFinder.__build_glcm_descriptor(image)
-            flattened_descriptors[image_index] = raw_descriptor.flatten()
+            raw_descriptor = self.__descriptor_builder.build_descriptor(image)
+            flattened_descriptors[image_index] = raw_descriptor
 
         train_set = numpy.array(flattened_descriptors)
 
@@ -94,7 +98,7 @@ class GLCMRandomPQSymmetricFinder(AbstractFinder):
     def __calculate_distances(self, query_image):
         distances = []
 
-        query_GLCM_descriptor = self.__build_glcm_descriptor(query_image)
+        query_GLCM_descriptor = self.__descriptor_builder.build_descriptor(query_image)
         query_GLCM_PQ_descriptor = self.__build_glcm_pq_descriptor(query_GLCM_descriptor)
 
         for image_index in xrange(self.data_source.get_count()):
@@ -124,13 +128,8 @@ class GLCMRandomPQSymmetricFinder(AbstractFinder):
         distance = math.sqrt(distances_sum)
         return distance
 
-    @staticmethod
-    def __build_glcm_descriptor(image):
-        glcm_descriptor = greycomatrix(image, [5], [0], 8, symmetric=True, normed=False)
-        return glcm_descriptor
-
     def __build_glcm_pq_descriptor(self, glcm_descriptor):
-        flattened_glcm_descriptor = glcm_descriptor.flatten()
+        flattened_glcm_descriptor = glcm_descriptor
 
         query_descriptor_chunks = GLCMRandomPQSymmetricFinder.randomly_split_array_of_arrays_by_columns(
             numpy.array([flattened_glcm_descriptor]),

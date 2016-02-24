@@ -8,6 +8,7 @@ from finders.glcm_rpq_asymm_finder import GLCMRandomPQAsymmetricFinder
 from finders.glcm_rpq_symm_equality_finder import GLCMRandomPQSymmetricEqualityFinder
 from finders.glcm_wta_finder import WTAFinder
 from knn_classifier import kNNClassifier
+from descriptor_builders.glcm_descriptor_builder import GLCMDescriptorBuilder
 import os
 
 __author__ = 'IgorKarpov'
@@ -22,7 +23,10 @@ class Evaluator:
 
     def evaluate_accuracy(self):
         file_names = self.__get_images_names(self.files_path, 'png')
-        data_source = DataSource(self.files_path, file_names)
+
+        data_source = DataSource(self.files_path, file_names, 8)
+        descriptor_builder = GLCMDescriptorBuilder(8)
+
         #finder = GLCMFinder(data_source)
         #finder = GLCMPCAFinder(data_source)
         #finder = GLCMPQSymmetricFinder(data_source, 5, 200)
@@ -37,7 +41,8 @@ class Evaluator:
         #finder = GLCMRandomPQSymmetricFinder(data_source, 10, 20, 100) # 58.958958959 8bin
         #finder = GLCMRandomPQSymmetricFinder(data_source, 5, 30, 500) # 65.4654654655 8bin
         #finder = GLCMRandomPQSymmetricFinder(data_source, 10, 20, 100) # 63.963963964 16bin
-        finder = GLCMRandomPQSymmetricFinder(data_source, 40, 3, 100) # 64.964964965 8bin
+        finder = GLCMRandomPQSymmetricFinder(data_source, descriptor_builder, 40, 3, 100) # 64.964964965 8bin
+
         classifier = kNNClassifier(5, finder)
 
         print('learning/indexing in progress ...')

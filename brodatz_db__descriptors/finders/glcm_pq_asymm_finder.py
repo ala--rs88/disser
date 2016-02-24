@@ -16,8 +16,8 @@ class GLCMPQAsymmetricFinder(AbstractFinder):
     product_members_count = 0
     clusters_count = 0
 
-    def __init__(self, data_source, product_members_count, clusters_count):
-        super(GLCMPQAsymmetricFinder, self).__init__(data_source)
+    def __init__(self, data_source, descriptor_builder, product_members_count, clusters_count):
+        super(GLCMPQAsymmetricFinder, self).__init__(data_source, descriptor_builder)
         self.product_members_count = product_members_count
         self.clusters_count = clusters_count
 
