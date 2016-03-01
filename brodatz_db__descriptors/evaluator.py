@@ -14,6 +14,8 @@ import random
 
 __author__ = 'IgorKarpov'
 
+# all these results computed with
+# glcm_descriptor = greycomatrix(image, [5], [0], self.__image_depth, symmetric=True, normed=False).flatten()
 #finder = GLCMFinder(data_source)
 #finder = GLCMPCAFinder(data_source)
 #finder = GLCMPQSymmetricFinder(data_source, 5, 200)
@@ -38,6 +40,9 @@ class Evaluator:
     def __init__(self, files_path):
         self.__files_path = files_path
         self.__file_names = Evaluator.__get_images_names(files_path, 'png')
+        # self.__file_names = random.sample(self.__file_names, 100)
+        #print self.__file_names
+        print ''
 
     def evaluate_accuracy(self,
                           image_depths_to_be_evaluated,

@@ -1,5 +1,7 @@
 from evaluator import Evaluator
 from descriptor_builders.glcm_descriptor_builder import GLCMDescriptorBuilder
+from descriptor_builders.lbp_histogram_descriptor_builder import LBPHistogramDescriptorBuilder
+from descriptor_builders.gray_scale_histogram_descriptor_builder import GrayScaleHistogramDescriptorBuilder
 from finders.glcm_rpq_symm_finder import GLCMRandomPQSymmetricFinder
 
 __author__ = 'IgorKarpov'
@@ -19,9 +21,11 @@ def main():
     evaluator = Evaluator('brodatz_database_bd.gidx')
 
     evaluator.evaluate_accuracy(
-                          [8, 16],
-                          lambda image_depth: GLCMDescriptorBuilder(image_depth),
-                          [[40, 3, 100], [10, 20, 100]],
+                          [16],
+                          #lambda image_depth: GLCMDescriptorBuilder(image_depth),
+                          #lambda image_depth: LBPHistogramDescriptorBuilder(),
+                          lambda image_depth: GrayScaleHistogramDescriptorBuilder(image_depth),
+                          [[5, 4, 100]],
                           build_random_PQ_symmetric_finder)
 
 if __name__ == '__main__':
