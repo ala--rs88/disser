@@ -11,6 +11,7 @@ from knn_classifier import kNNClassifier
 import os
 import numpy
 import random
+import sys
 
 __author__ = 'IgorKarpov'
 
@@ -40,52 +41,117 @@ class Evaluator:
     def __init__(self, files_path):
         self.__files_path = files_path
         self.__file_names = Evaluator.__get_images_names(files_path, 'png')
-        # self.__file_names = random.sample(self.__file_names, 100)
+        #random.seed(12345)
+        #self.__file_names = random.sample(self.__file_names, 50)
         #print self.__file_names
         print ''
 
+    # descriptor_pack =
+    #   descriptor_name,
+    #   descriptor_additional_parameters_names,
+    #   descriptor_additional_parameters_sets,
+    #   build_descriptor_builder
+    # finder_pack =
+    #   finder_name,
+    #   finder_parameters_names,
+    #   finder_parameters_sets,
+    #   build_finder
     def evaluate_accuracy(self,
                           image_depths_to_be_evaluated,
-                          build_descriptor_builder,
-                          finder_parameters_sets_to_be_evaluated,
-                          build_finder):
+                          descriptors_packs,
+                          finders_packs):
+        try:
 
-        # TODO: use using
-        # TODO: create new before begin, then open-append-close in cycle
-        f = open(os.path.join("evaluation_results", "test_results"), 'w')
+            for finder_pack in finders_packs:
+                for descriptor_pack in descriptors_packs:
+                    finder_name = finder_pack['finder_name']
+                    finder_parameters_names = finder_pack['finder_parameters_names']
+                    finder_parameters_sets = finder_pack['finder_parameters_sets']
+                    build_finder = finder_pack['build_finder']
+                    descriptor_name = descriptor_pack['descriptor_name']
+                    descriptor_additional_parameters_names = descriptor_pack['descriptor_additional_parameters_names']
+                    descriptor_additional_parameters_sets = descriptor_pack['descriptor_additional_parameters_sets']
+                    build_descriptor_builder = descriptor_pack['build_descriptor_builder']
 
-        for image_depth in image_depths_to_be_evaluated:
-            for finder_parameters_set in finder_parameters_sets_to_be_evaluated:
-                Evaluator.reset_environment()
-                accuracy = Evaluator.evaluate_set_accuracy(self.__files_path,
-                                                           self.__file_names,
-                                                           image_depth,
-                                                           build_descriptor_builder,
-                                                           finder_parameters_set,
-                                                           build_finder)
+                    full_result_file_path = Evaluator.get_full_path_for_file(finder_name, descriptor_name)
+                    Evaluator.prepare_result_file(full_result_file_path)
 
-                f.write('SET EVALUATED:\n')
-                f.write('accuracy = ' + repr(accuracy) + '\n')
-                f.write('depth = ' + repr(image_depth) + '\n')
-                f.write('finder_parameters_set = ' + repr(finder_parameters_set) + '\n\n')
+                    columns_names = ['image_depth']
+                    columns_names.extend(finder_parameters_names)
+                    columns_names.extend(descriptor_additional_parameters_names)
+                    columns_names.extend(['accuracy',
+                                          'learning_time',
+                                          '1_image_classification_time',
+                                          'total_classification_time'])
+                    columns_names_csv_row = ','.join(columns_names)
+                    with open(full_result_file_path, 'a') as result_file:
+                        result_file.write(columns_names_csv_row)
+                        result_file.write('\n')
 
-                print('\n\nSET EVALUATED:')
-                print('accuracy = ' + repr(accuracy))
-                print('depth = ' + repr(image_depth))
-                print('finder_parameters_set = ' + repr(finder_parameters_set))
-                print('\n\n')
+                    for image_depth in image_depths_to_be_evaluated:
+                        for finder_parameters_set in finder_parameters_sets:
+                            for descriptor_additional_parameters_set in descriptor_additional_parameters_sets:
 
-        f.close()
+                                csv_row_values = [repr(image_depth)]
+                                finder_values = map(lambda x: repr(x), finder_parameters_set)
+                                csv_row_values.extend(finder_values)
+                                descriptor_values = map(lambda x: repr(x), descriptor_additional_parameters_set)
+                                csv_row_values.extend(descriptor_values)
+
+                                try:
+                                    Evaluator.reset_environment()
+                                    accuracy = Evaluator.evaluate_set_accuracy(
+                                        self.__files_path,
+                                        self.__file_names,
+                                        image_depth,
+                                        descriptor_additional_parameters_set,
+                                        build_descriptor_builder,
+                                        finder_parameters_set,
+                                        build_finder)
+                                    csv_row_values.extend([repr(accuracy), '???', '???', '???'])
+                                except:
+                                    e = sys.exc_info()
+                                    print("Error type 2: " + repr(e) + '\n\n')
+                                    csv_row_values.extend(['error', 'error', 'error', 'error'])
+
+                                csv_row = ','.join(csv_row_values)
+                                with open(full_result_file_path, 'a') as result_file:
+                                    result_file.write(csv_row)
+                                    result_file.write('\n')
+
+                                print('SET EVALUATED: ' + full_result_file_path + '\n')
+
+                    print('FILE READY: ' + full_result_file_path + '\n')
+
+        except:
+            e = sys.exc_info()
+            print("Error type 1: " + repr(e) + '\n\n')
+
+
+
+    @staticmethod
+    def get_full_path_for_file(finder_name, descriptor_name):
+        file_name = finder_name + '_' + descriptor_name
+        full_path = os.path.join("evaluation_results", file_name)
+        return full_path
+
+    @staticmethod
+    def prepare_result_file(full_path_to_file):
+        try:
+            os.remove(full_path_to_file)
+        except OSError:
+            pass
 
     @staticmethod
     def evaluate_set_accuracy(files_path,
                               file_names,
                               image_depth,
+                              descriptor_additional_parameters,
                               build_descriptor_builder,
                               finder_parameters_set,
                               build_finder):
         data_source = DataSource(files_path, file_names, image_depth)
-        descriptor_builder = build_descriptor_builder(image_depth)
+        descriptor_builder = build_descriptor_builder(image_depth, descriptor_additional_parameters)
         finder = build_finder(data_source, descriptor_builder, finder_parameters_set)
         classifier = kNNClassifier(5, finder)
 

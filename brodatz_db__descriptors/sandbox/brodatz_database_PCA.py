@@ -2,6 +2,7 @@ from PIL import Image
 from numpy import *
 from skimage.feature import greycomatrix
 from skimage.feature import local_binary_pattern
+import os
 
 __author__ = 'Igor'
 
@@ -40,19 +41,32 @@ __author__ = 'Igor'
 
 def main():
 
-    image = [[1, 2, 2, 2],
-             [9, 5, 6, 4],
-             [5, 3, 1, 16],
-             [9, 7, 6, 4]]
+    filename = os.path.join("evaluation_results", "test_results")
 
-    neighbours_count = 8
-    max_pixel_descriptor_value = 2**neighbours_count
+    # try:
+    #     os.remove(filename)
+    # except OSError:
+    #     pass
 
-    lbp_matrix = local_binary_pattern(image, neighbours_count, 1, 'ror')
-    print lbp_matrix
+    with open(filename, 'a') as file:
+        file.write("A")
 
-    hist, bin_edges = histogram(lbp_matrix, bins=range(max_pixel_descriptor_value + 1))
-    print hist
+    with open(filename, 'a') as file:
+        file.write("B")
+
+    # image = [[1, 2, 2, 2],
+    #          [9, 5, 6, 4],
+    #          [5, 3, 1, 16],
+    #          [9, 7, 6, 4]]
+    #
+    # neighbours_count = 8
+    # max_pixel_descriptor_value = 2**neighbours_count
+    #
+    # lbp_matrix = local_binary_pattern(image, neighbours_count, 1, 'ror')
+    # print lbp_matrix
+    #
+    # hist, bin_edges = histogram(lbp_matrix, bins=range(max_pixel_descriptor_value + 1))
+    # print hist
 
 
 
