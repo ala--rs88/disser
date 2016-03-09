@@ -20,6 +20,9 @@ def build_GLCMDescriptorBuilder(image_depth, additional_params):
     builder = GLCMDescriptorBuilder(image_depth)
     return builder
 
+def build_LBPHistogramDescriptorBuilder(image_depth, additional_params):
+    builder = LBPHistogramDescriptorBuilder()
+    return builder
 
 def main():
     evaluator = Evaluator('brodatz_database_bd.gidx')
@@ -40,17 +43,25 @@ def main():
     #                       descriptors_packs,
     #                       finders_packs):
 
-    descriptors_packs = [{
-        'descriptor_name': 'GLCMDescriptor',
-        'descriptor_additional_parameters_names': [],
-        'descriptor_additional_parameters_sets': [[]],
-        'build_descriptor_builder': build_GLCMDescriptorBuilder
-    }]
+    descriptors_packs = [
+        {
+            'descriptor_name': 'GLCMDescriptor',
+            'descriptor_additional_parameters_names': [],
+            'descriptor_additional_parameters_sets': [[]],
+            'build_descriptor_builder': build_GLCMDescriptorBuilder
+        },
+        {
+            'descriptor_name': 'LBPHistogramDescriptorBuilder',
+            'descriptor_additional_parameters_names': [],
+            'descriptor_additional_parameters_sets': [[]],
+            'build_descriptor_builder': build_LBPHistogramDescriptorBuilder
+        }
+    ]
 
     finders_packs = [{
         'finder_name': 'RandomPQSymmetricFinder',
         'finder_parameters_names': ['product_members_count', 'product_member_size', 'clusters_count'],
-        'finder_parameters_sets': [[5, 4, 10], [3, 2, 10]],
+        'finder_parameters_sets': [[3, 2, 10]],
         'build_finder': build_RandomPQSymmetricFinder
     }]
 
