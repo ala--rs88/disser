@@ -61,12 +61,12 @@ def main():
     finders_packs = [{
         'finder_name': 'RandomPQSymmetricFinder',
         'finder_parameters_names': ['product_members_count', 'product_member_size', 'clusters_count'],
-        'finder_parameters_sets': [[3, 2, 10]],
+        'finder_parameters_sets': [[3, 2, 10], [5, 30, 500], [3, 256*200, 500]],
         'build_finder': build_RandomPQSymmetricFinder
     }]
 
     evaluator.evaluate_accuracy(
-        [8, 16],
+        [8, 16, 256],
         descriptors_packs,
         finders_packs)
 

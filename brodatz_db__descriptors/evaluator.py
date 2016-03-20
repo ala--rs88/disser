@@ -5,6 +5,8 @@ import numpy
 import random
 import sys
 from multiprocessing import Process
+import traceback
+from uuid import uuid4
 
 __author__ = 'IgorKarpov'
 
@@ -38,6 +40,10 @@ def evaluate_data_for_result_file(finder_pack, descriptor_pack, image_depths_to_
         build_descriptor_builder = descriptor_pack['build_descriptor_builder']
 
         full_result_file_path = Evaluator.get_full_path_for_file(finder_name, descriptor_name)
+        if (os.path.exists(full_result_file_path)):
+            print('FILE ALREADY EXISTS: ' + full_result_file_path + '\n')
+            return
+
         Evaluator.prepare_result_file(full_result_file_path)
 
         columns_names = ['image_depth']
@@ -77,6 +83,8 @@ def evaluate_data_for_result_file(finder_pack, descriptor_pack, image_depths_to_
                         e = sys.exc_info()
                         print("Error type 3: " + repr(e) + '\n\n')
                         csv_row_values.extend(['error', 'error', 'error', 'error'])
+                        log_error("TYPE_3", e, finder_name, descriptor_name)
+
 
                     csv_row = ','.join(csv_row_values)
                     with open(full_result_file_path, 'a') as result_file:
@@ -90,7 +98,14 @@ def evaluate_data_for_result_file(finder_pack, descriptor_pack, image_depths_to_
     except:
         e = sys.exc_info()
         print("Error type 2: " + repr(e) + '\n\n')
+        log_error("TYPE_2", e, 'NONE', 'NONE')
 
+
+def log_error(error_label, error_info, finder_name, descriptor_name):
+    error_file_path = Evaluator.get_full_path_for_error_file(error_label, finder_name, descriptor_name)
+    with open(error_file_path, 'w') as error_file:
+        error_file.write(error_label + repr(error_info) + '\n\n')
+        traceback.print_exception(*error_info, file=error_file)
 
 class Evaluator:
 
@@ -100,8 +115,8 @@ class Evaluator:
     def __init__(self, files_path):
         self.__files_path = files_path
         self.__file_names = Evaluator.__get_images_names(files_path, 'png')
-        #random.seed(12345)
-        #self.__file_names = random.sample(self.__file_names, 50)
+        # random.seed(12345)
+        # self.__file_names = random.sample(self.__file_names, 50)
         #print self.__file_names
         print ''
 
@@ -128,7 +143,7 @@ class Evaluator:
                         target=evaluate_data_for_result_file,
                         args=[finder_pack, descriptor_pack, image_depths_to_be_evaluated, self.__files_path, self.__file_names])
                     processes.append(process)
-                    
+
             for process in processes:
                 process.start()
             for process in processes:
@@ -139,12 +154,22 @@ class Evaluator:
         except:
             e = sys.exc_info()
             print("Error type 1: " + repr(e) + '\n\n')
+            log_error("TYPE_1", e, 'NONE', 'NONE')
 
     @staticmethod
     def get_full_path_for_file(finder_name, descriptor_name):
         file_name = finder_name + '_' + descriptor_name
         full_path = os.path.join("evaluation_results", file_name)
         return full_path
+
+    @staticmethod
+    def get_full_path_for_error_file(error_label, finder_name, descriptor_name):
+        uuid = uuid4()
+        uuid_string = str(uuid)
+        file_name = finder_name + '_' + descriptor_name + '_ERROR_' + error_label + '_' + uuid_string
+        full_path = os.path.join("evaluation_results", file_name)
+        return full_path
+
 
     @staticmethod
     def prepare_result_file(full_path_to_file):
