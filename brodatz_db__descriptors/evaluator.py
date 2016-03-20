@@ -83,7 +83,8 @@ def evaluate_data_for_result_file(finder_pack, descriptor_pack, image_depths_to_
                         e = sys.exc_info()
                         print("Error type 3: " + repr(e) + '\n\n')
                         csv_row_values.extend(['error', 'error', 'error', 'error'])
-                        log_error("TYPE_3", e, finder_name, descriptor_name)
+                        additional_info = ','.join(csv_row_values)
+                        log_error("TYPE_3", e, finder_name, descriptor_name, additional_info)
 
 
                     csv_row = ','.join(csv_row_values)
@@ -98,12 +99,14 @@ def evaluate_data_for_result_file(finder_pack, descriptor_pack, image_depths_to_
     except:
         e = sys.exc_info()
         print("Error type 2: " + repr(e) + '\n\n')
-        log_error("TYPE_2", e, 'NONE', 'NONE')
+        log_error("TYPE_2", e, 'NONE', 'NONE', None)
 
 
-def log_error(error_label, error_info, finder_name, descriptor_name):
+def log_error(error_label, error_info, finder_name, descriptor_name, additional_info):
     error_file_path = Evaluator.get_full_path_for_error_file(error_label, finder_name, descriptor_name)
     with open(error_file_path, 'w') as error_file:
+        if not additional_info is None:
+            error_file.write(additional_info + '\n\n')
         error_file.write(error_label + repr(error_info) + '\n\n')
         traceback.print_exception(*error_info, file=error_file)
 
@@ -154,7 +157,7 @@ class Evaluator:
         except:
             e = sys.exc_info()
             print("Error type 1: " + repr(e) + '\n\n')
-            log_error("TYPE_1", e, 'NONE', 'NONE')
+            log_error("TYPE_1", e, 'NONE', 'NONE', None)
 
     @staticmethod
     def get_full_path_for_file(finder_name, descriptor_name):

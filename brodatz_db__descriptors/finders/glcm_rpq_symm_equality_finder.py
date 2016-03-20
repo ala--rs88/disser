@@ -19,6 +19,10 @@ class GLCMRandomPQSymmetricEqualityFinder(AbstractFinder):
 
     def __init__(self, data_source, descriptor_builder, product_members_count, product_member_size, clusters_count):
         super(GLCMRandomPQSymmetricEqualityFinder, self).__init__(data_source, descriptor_builder)
+
+        if descriptor_builder.get_descriptor_length() < product_member_size:
+            raise ValueError('Invalid Arguments: product_member_size cannot be greater than descriptor length')
+
         self.product_members_count = product_members_count
         self.product_member_size = product_member_size
         self.clusters_count = clusters_count
