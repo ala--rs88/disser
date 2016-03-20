@@ -7,6 +7,7 @@ import sys
 from multiprocessing import Process
 import traceback
 from uuid import uuid4
+import time
 
 __author__ = 'IgorKarpov'
 
@@ -50,9 +51,9 @@ def evaluate_data_for_result_file(finder_pack, descriptor_pack, image_depths_to_
         columns_names.extend(finder_parameters_names)
         columns_names.extend(descriptor_additional_parameters_names)
         columns_names.extend(['accuracy',
-                              'learning_time',
-                              '1_image_classification_time',
-                              'total_classification_time'])
+                              'learning_time_s',
+                              '1_image_classification_time_ms',
+                              'total_classification_time_s'])
         columns_names_csv_row = ','.join(columns_names)
         with open(full_result_file_path, 'a') as result_file:
             result_file.write(columns_names_csv_row)
@@ -70,15 +71,19 @@ def evaluate_data_for_result_file(finder_pack, descriptor_pack, image_depths_to_
 
                     try:
                         Evaluator.reset_environment()
-                        accuracy = Evaluator.evaluate_set_accuracy(
-                            files_path,
-                            file_names,
-                            image_depth,
-                            descriptor_additional_parameters_set,
-                            build_descriptor_builder,
-                            finder_parameters_set,
-                            build_finder)
-                        csv_row_values.extend([repr(accuracy), '???', '???', '???'])
+                        accuracy, learning_time_secs, average_classification_time_ms, total_classification_time_secs\
+                            = Evaluator.evaluate_set_accuracy(
+                                files_path,
+                                file_names,
+                                image_depth,
+                                descriptor_additional_parameters_set,
+                                build_descriptor_builder,
+                                finder_parameters_set,
+                                build_finder)
+                        csv_row_values.extend([repr(accuracy),
+                                               repr(learning_time_secs),
+                                               repr(average_classification_time_ms),
+                                               repr(total_classification_time_secs)])
                     except:
                         e = sys.exc_info()
                         print("Error type 3: " + repr(e) + '\n\n')
@@ -195,7 +200,10 @@ class Evaluator:
         classifier = kNNClassifier(5, finder)
 
         print('learning/indexing in progress ...')
+        learning_start = time.time()
         classifier.learn(data_source, None)
+        learning_end = time.time()
+        learning_time_secs = learning_end - learning_start
         print('learning/indexing completed')
 
         print('classification in progress ...')
@@ -207,6 +215,8 @@ class Evaluator:
         local_attempts_count = 0
         local_mistakes_count = 0
 
+        total_classification_time_secs = 0
+
         total_images_count = data_source.get_count()
         for image_index in xrange(0, total_images_count):
 
@@ -215,7 +225,12 @@ class Evaluator:
             image = data_source.get_image(image_index)
             actual_class = data_source.get_image_class(image_index)
             data_source.excluded_index = image_index
+
+            single_classification_start = time.time()
             calculated_class = classifier.classify_image(image)
+            single_classification_end = time.time()
+            single_classification_time_secs = single_classification_end - single_classification_start
+            total_classification_time_secs += single_classification_time_secs
 
             is_correct = calculated_class == actual_class
             if not is_correct:
@@ -247,8 +262,9 @@ class Evaluator:
 
         correct_results = current_total_attempts - mistakes_count
         accuracy = (float(correct_results) / current_total_attempts) * 100
+        average_classification_time_ms = (total_classification_time_secs / current_total_attempts) * 1000
 
-        return accuracy
+        return accuracy, learning_time_secs, average_classification_time_ms, total_classification_time_secs
 
     @staticmethod
     def reset_environment():
