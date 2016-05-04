@@ -28,7 +28,7 @@ class GLCMPQAsymmetricFinder(AbstractFinder):
         flattened_descriptors = [None] * images_count
         for image_index in xrange(images_count):
             image = train_data_source.get_image(image_index)
-            descriptor = GLCMPQAsymmetricFinder.__descriptor_builder.build_descriptor(image)
+            descriptor = self.descriptor_builder.build_descriptor(image)
             flattened_descriptors[image_index] = descriptor
 
         train_set = numpy.array(flattened_descriptors)
@@ -65,7 +65,7 @@ class GLCMPQAsymmetricFinder(AbstractFinder):
     def __calculate_distances(self, query_image):
         distances = []
 
-        flattened_query_GLCM_descriptor = self.__descriptor_builder.build_descriptor(query_image)
+        flattened_query_GLCM_descriptor = self.descriptor_builder.build_descriptor(query_image)
         chunked_query_GLCM_descriptor = GLCMPQAsymmetricFinder.split_array_of_arrays_by_columns(
             numpy.array([flattened_query_GLCM_descriptor]),
             self.product_members_count)

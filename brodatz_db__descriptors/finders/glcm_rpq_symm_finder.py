@@ -33,12 +33,12 @@ class GLCMRandomPQSymmetricFinder(AbstractFinder):
         self.product_members_count = product_members_count
         self.product_member_size = product_member_size
         self.clusters_count = clusters_count
-        self.__descriptor_builder = descriptor_builder
+        self.descriptor_builder = descriptor_builder
 
     def learn(self, train_data_source, params_dict):
 
         self.random_product_members_first_columns_indexes = self.build_random_product_members_first_columns_indexes(
-            self.__descriptor_builder.get_descriptor_length(),
+            self.descriptor_builder.get_descriptor_length(),
             self.product_members_count,
             self.product_member_size)
 
@@ -47,7 +47,7 @@ class GLCMRandomPQSymmetricFinder(AbstractFinder):
         flattened_descriptors = [None] * images_count
         for image_index in xrange(images_count):
             image = train_data_source.get_image(image_index)
-            raw_descriptor = self.__descriptor_builder.build_descriptor(image)
+            raw_descriptor = self.descriptor_builder.build_descriptor(image)
             flattened_descriptors[image_index] = raw_descriptor
 
         train_set = numpy.array(flattened_descriptors)
@@ -100,7 +100,7 @@ class GLCMRandomPQSymmetricFinder(AbstractFinder):
     def __calculate_distances(self, query_image):
         distances = []
 
-        query_GLCM_descriptor = self.__descriptor_builder.build_descriptor(query_image)
+        query_GLCM_descriptor = self.descriptor_builder.build_descriptor(query_image)
         query_GLCM_PQ_descriptor = self.__build_glcm_pq_descriptor(query_GLCM_descriptor)
 
         for image_index in xrange(self.data_source.get_count()):

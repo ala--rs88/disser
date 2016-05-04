@@ -25,7 +25,7 @@ class WTAFinder(AbstractFinder):
     def learn(self, train_data_source, params_dict):
 
         self.random_permutations_indexes = WTAFinder.__build_random_permutations_indexes(
-            self.__descriptor_builder.get_descriptor_length(),
+            self.descriptor_builder.get_descriptor_length(),
             self.active_permutation_length,
             self.permutations_count)
 
@@ -65,7 +65,7 @@ class WTAFinder(AbstractFinder):
         return distance
 
     def __build_wta_hash(self, image, random_permutations_indexes):
-        descriptor = self.__descriptor_builder.build_descriptor(image)
+        descriptor = self.descriptor_builder.build_descriptor(image)
         random_active_permutations = []
 
         for permutation_indexes in random_permutations_indexes:

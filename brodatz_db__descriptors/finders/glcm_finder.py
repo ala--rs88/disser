@@ -25,7 +25,7 @@ class GLCMFinder(AbstractFinder):
         descriptors_cache = {}
         for image_index in xrange(0, data_source.get_count()):
             image = self.data_source.get_image(image_index)
-            descriptor = self.__descriptor_builder.build_descriptor(image)
+            descriptor = self.descriptor_builder.build_descriptor(image)
             image_file_name = self.data_source.get_image_file_name(image_index)
             descriptors_cache[image_file_name] = descriptor
         return descriptors_cache
@@ -33,7 +33,7 @@ class GLCMFinder(AbstractFinder):
     def __calculate_distances(self, query_image):
         distances = []
 
-        query_image_descriptor = self.__descriptor_builder.build_descriptor(query_image)
+        query_image_descriptor = self.descriptor_builder.build_descriptor(query_image)
 
         for image_index in xrange(0, self.data_source.get_count()):
             image_file_name = self.data_source.get_image_file_name(image_index)

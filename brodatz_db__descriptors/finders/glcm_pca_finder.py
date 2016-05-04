@@ -18,7 +18,7 @@ class GLCMPCAFinder(AbstractFinder):
         flattened_descriptors = [None] * train_data_source.get_count()
         for image_index in xrange(train_data_source.get_count()):
             image = train_data_source.get_image(image_index)
-            descriptor = self.__descriptor_builder.build_descriptor(image)
+            descriptor = self.descriptor_builder.build_descriptor(image)
             flattened_descriptors[image_index] = descriptor
 
         PCA_train_set = numpy.array(flattened_descriptors)
@@ -40,7 +40,7 @@ class GLCMPCAFinder(AbstractFinder):
     def __calculate_distances(self, query_image):
         distances = []
 
-        query_image_glcm_descriptor = self.__descriptor_builder.build_descriptor(query_image)
+        query_image_glcm_descriptor = self.descriptor_builder.build_descriptor(query_image)
         query_image_glcm_pca_descriptor = self.pca.transform(query_image_glcm_descriptor)
 
         for image_index in xrange(0, self.data_source.get_count()):
